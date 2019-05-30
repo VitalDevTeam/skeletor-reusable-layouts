@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Skeletor Reusable Layouts
  * Description: Add-on for Skeletor to create a library of Reusable Layouts which automatically appear in the Global Layouts menu
- * Version: 1.0.0-beta
+ * Version: 1.1.0-beta
  * Author: Vital Design
  * Author URI: https://vtldesign.com
  */
@@ -23,6 +23,20 @@ class VTL_Skeletor_Reusable_Layouts {
 		return array_map(['VTL_Skeletor_Reusable_Layouts', 'reusable_layout_to_global_layout'], $gb_posts);
 	}
 
+	public static function get_layout_message_field($block_id) {
+		if (!$p = get_post($block_id)) {
+			return false;
+		}
+
+		$edit_url = admin_url("post.php?post={$p->ID}&action=edit");
+
+		return [
+			'key'     => "layout_{$p->post_name}_message",
+			'type'    => 'message',
+			'message' => "<p>This will automatically display the content from the <strong>“{$p->post_title}”</strong> Reusable Layout.</p><p><a href=\"{$edit_url}\" target=\"_blank\" class=\"button primary large\">Edit Reusable Layout</a></p>",
+		];
+	}
+
 	public static function reusable_layout_to_global_layout($block_id) {
 		if (!$p = get_post($block_id)) {
 			return false;
@@ -35,13 +49,7 @@ class VTL_Skeletor_Reusable_Layouts {
 			'name'       => "reusable_layout_{$p->post_name}",
 			'label'      => "Reusable Layouts / {$p->post_title}",
 			'display'    => 'block',
-			'sub_fields' => [
-				[
-					'key'     => "layout_{$p->post_name}_message",
-					'type'    => 'message',
-					'message' => "<p>This will automatically display the content from the <strong>“{$p->post_title}”</strong> Reusable Layout.</p><p><a href=\"{$edit_url}\" target=\"_blank\" class=\"button primary large\">Edit Block</a></p>",
-				],
-			],
+			'sub_fields' => [static::get_layout_message_field($block_id)],
 		];
 	}
 

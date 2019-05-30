@@ -45,7 +45,7 @@ function onClickSavePrefab(e) {
 	let prefab = getLayoutAsPrefab(layout);
 
 	let customTitle = '';
-	let customTitleField = acf.getFields({name: 'custom_layout_title', parent: layout}).pop();
+	let customTitleField = acf.getFields({ name: 'custom_layout_title', parent: layout }).pop();
 
 	if (customTitleField) {
 		customTitle = customTitleField.val();
@@ -57,7 +57,22 @@ function onClickSavePrefab(e) {
 		return;
 	} else {
 		$.post(`${SiteInfo.restUrl}vtl/vtlreusablelayouts`, prefab)
-			.then(data => window.alert(data.message));
+			.then(data => {
+				let fcField = acf.getField(layout.closest('.acf-field-flexible-content').attr('data-key'));
+
+				fcField.$el.find('.clones')
+					.eq(0)
+					.append(data.layout);
+
+				fcField.add({
+					layout: data.layoutData.name,
+					before: layout,
+				});
+
+				fcField.removeLayout(layout);
+
+				window.alert(data.message);
+			});
 	}
 }
 
