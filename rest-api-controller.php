@@ -13,6 +13,39 @@ class VTL_Skeletor_Reusable_Layouts_REST_Controller extends WP_REST_Controller {
 			'methods'  => 'POST',
 			'callback' => [$this, 'create_reusable_layout'],
 		]);
+
+		register_rest_route($this->namespace, "/{$this->resource_name}/(?P<id>[0-9]+)", [
+			'methods'  => 'GET',
+			'callback' => [$this, 'break_apart_reusable_layout'],
+		]);
+	}
+
+	public function break_apart_reusable_layout($request) {
+		$id = $request['id'];
+		$title = get_the_title($id);
+
+		$layouts = array_map(function($layout) {
+			$layout_name = '';
+			$layout_data = [];
+
+			foreach ($layout as $key=>$val) {
+				if ($key === 'acf_fc_layout') {
+					$layout_name = $val;
+				} else {
+					$layout_data[$key] = $val;
+				}
+			}
+
+			return [
+				'layout' => $layout_name,
+				'data'   => $layout_data,
+			];
+		}, get_field('layouts', $id));
+
+		return rest_ensure_response([
+			'message' => "Break apart Reusable Layout “{$title}”!",
+			'layouts' => $layouts,
+		]);
 	}
 
 	public function get_fake_reusable_layout_clone_data($reusable_layout_id) {

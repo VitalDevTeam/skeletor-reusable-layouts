@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Skeletor Reusable Layouts
  * Description: Add-on for Skeletor to create a library of Reusable Layouts which automatically appear in the Global Layouts menu
- * Version: 1.1.0-beta
+ * Version: 1.2.0-beta
  * Author: Vital Design
  * Author URI: https://vtldesign.com
  */
@@ -29,11 +29,15 @@ class VTL_Skeletor_Reusable_Layouts {
 		}
 
 		$edit_url = admin_url("post.php?post={$p->ID}&action=edit");
+		$message = <<<MSG
+This will automatically display the content from the <strong>“{$p->post_title}”</strong> Reusable Layout.
 
+<a href="{$edit_url}" target="_blank" class="button primary large">Edit Reusable Layout</a> <a href="javascript:void(0)" data-prefab-id="{$p->ID}" class="button primary large break-apart">Break Apart</a>
+MSG;
 		return [
 			'key'     => "layout_{$p->post_name}_message",
 			'type'    => 'message',
-			'message' => "<p>This will automatically display the content from the <strong>“{$p->post_title}”</strong> Reusable Layout.</p><p><a href=\"{$edit_url}\" target=\"_blank\" class=\"button primary large\">Edit Reusable Layout</a></p>",
+			'message' => $message,
 		];
 	}
 
@@ -94,7 +98,12 @@ class VTL_Skeletor_Reusable_Layouts {
 		update_post_meta($id, '_layouts', 'field_global_layouts');
 
 		foreach ($data as $key => $val) {
-			$meta_key = sprintf('layouts_0_%s', $key);
+			if (preg_match('/^_/', $key)) {
+				$meta_key = sprintf('_layouts_0%s', $key);
+			} else {
+				$meta_key = sprintf('layouts_0_%s', $key);
+			}
+
 			update_post_meta($id, $meta_key, $val);
 		}
 	}
