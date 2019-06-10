@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Skeletor Reusable Layouts
  * Description: Add-on for Skeletor to create a library of Reusable Layouts which automatically appear in the Global Layouts menu
- * Version: 1.2.0-beta
+ * Version: 1.2.1-beta
  * Author: Vital Design
  * Author URI: https://vtldesign.com
  */

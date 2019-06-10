@@ -11,7 +11,7 @@ function getLayoutAsPrefab(layout) {
 		parent: layout
 	});
 
-	var prefabData = fields.reduce((data, field) => {
+	var prefabData = fields.reduce(function (data, field) {
 		var namePrefix = '';
 		var fieldName = field.data.name;
 
@@ -91,10 +91,12 @@ function onClickBreakApart(e) {
 	var prefabId = clicked.attr('data-prefab-id');
 	var layoutEl = clicked.closest('.layout');
 
+	clicked.closest('.acf-input').slideUp('slow').after('<p class="break-apart-loading">Loading… <i class="acf-spinner is-active"></i></p>');
+
 	var fcField = acf.getField(layoutEl.closest('.acf-field-flexible-content').attr('data-key'));
 
 	$.get(`${SiteInfo.restUrl}vtl/vtlreusablelayouts/${prefabId}`)
-		.then(data => {
+		.then(function(data) {
 			for (var i=0; i<data.layouts.length; i++) {
 				var l = data.layouts[i];
 
@@ -108,125 +110,159 @@ function onClickBreakApart(e) {
 					var subField = acf.getField(acf.findField(key, added));
 					var val = l.data[name];
 
-					switch (subField.data.type) {
-						case 'image':
-						case 'file':
-							var atts = {};
-							for (var k in val) {
-								atts[k] = val[k];
-							}
-							val.attributes = atts;
-							subField.render(val);
-							break;
-
-						case 'wysiwyg':
-							var editorWrap = subField.$el.find('.wp-editor-wrap');
-							if (editorWrap.length > 0) {
-								var editorID = editorWrap.eq(0).attr('id').replace(/^wp-/, '').replace(/-wrap$/, '')
-								window.tinyMCE.get(editorID).setContent(val);
-							}
-							break;
-
-						case 'oembed':
-							var url = $(val).attr('src').split('?').shift();
-
-							subField.$search().val(url);
-							subField.val(url);
-							subField.$el.find('.canvas-media').html(val);
-
-							break;
-
-						case 'gallery':
-							for (var attIndex in val) {
-								var att = val[attIndex];
-								subField.appendAttachment(att, attIndex);
-							}
-
-							break;
-
-						case 'checkbox':
-							subField.$inputs().each(function(i, checkbox) {
-								if (val.indexOf(checkbox.value) >= 0) {
-									checkbox.setAttribute('checked', 'checked');
-								}
-							});
-							break;
-
-						case 'radio':
-							subField.$control().find('[value="'+val+'"]').prop('checked', 'checked');
-							break;
-
-						case 'button_group':
-							subField.val(val);
-							subField.$el.find('input[value="' + val + '"]').prop('checked', 'checked').trigger('click');
-							break;
-
-						case 'true_false':
-							if (val) {
-								subField.$input().prop('checked', 'checked');
-							}
-							break;
-
-						case 'post_object':
-							subField.$el.find('.select2-selection__rendered').html(val.post_title);
-							subField.$el.find('.select2-hidden-accessible').html('<option selected value="' + val.ID + '">' + val.post_title + '</option>')
-							subField.val(val.ID);
-							break;
-
-						case 'page_link':
-							subField.$el.find('.select2-selection__rendered').html(val);
-							subField.$el.find('.select2-hidden-accessible').html('<option selected value="' + val + '">' + val + '</option>')
-							subField.val(val);
-							break;
-
-						case 'relationship':
-							(function (field, value) {
-								var loadCheck = setInterval(function () {
-									if (!field.get('loading')) {
-										clearInterval(loadCheck);
-										for (var relIndex in value) {
-											var post = value[relIndex];
-											field.$el.find('[data-id=' + post.ID + ']').trigger('click');
-										}
-									}
-								}, 100);
-							})(subField, val);
-
-							break;
-
-						case 'taxonomy':
-							for (var taxIndex in val) {
-								subField.$el
-									.find('[value=' + val[taxIndex] + ']')
-									.prop('checked', 'checked');
-							}
-							break;
-
-						case 'user':
-							var userLabel = val.user_nicename + ' (' + val.nickname + ')';
-							subField.$el.find('.select2-selection__rendered').html(userLabel);
-							subField.$el.find('.select2-hidden-accessible').html('<option selected value="' + val.ID + '">' + userLabel + '</option>')
-							subField.val(val.ID);
-							break;
-
-						case 'google_map':
-							break;
-
-						case 'date_picker':
-						case 'date_time_picker':
-						case 'time_picker':
-							subField.val(val);
-							subField.$el.find('[type=text]').val(val);
-							break;
-
-						default:
-							subField.val(val);
-					}
+					setFieldValue(subField, val);
 				}
 			}
 
-			fcField.removeLayout(layoutEl);
+			layoutEl.slideUp(400, function() {
+				fcField.removeLayout(layoutEl);
+			});
 		});
+}
+
+function setSelect2FieldValue(field, value, label) {
+	field.$el.find('.select2-selection__rendered').html(label);
+	field.$el.find('.select2-hidden-accessible').html('<option selected value="' + value + '">' + label + '</option>')
+	field.val(value);
+}
+
+function setFieldValue(field, value) {
+	switch (field.data.type) {
+		case 'repeater':
+			//Clean out any row there by default
+			var rows = field.$rows();
+			if (rows.length > 0) {
+				field.remove(field.$rows().eq(0));
+			}
+
+			for (var rowIndex in value) {
+				var row = value[rowIndex];
+				var rowEl = field.add();
+
+				for (var rowName in row) {
+					var rowVal = row[rowName];
+					var repeaterSubField = acf.getField(rowEl.find('[data-name="' + rowName + '"]'));
+
+					setFieldValue(repeaterSubField, rowVal);
+				}
+			}
+
+			break;
+
+		case 'clone':
+			for (var cloneKey in value) {
+				var cloneValue = value[cloneKey];
+				var cloneSubField = acf.getField(field.$el.find('[data-name="' + cloneKey + '"]'));
+
+				setFieldValue(cloneSubField, cloneValue);
+			}
+			break;
+
+		case 'image':
+		case 'file':
+			var atts = {};
+			for (var k in value) {
+				atts[k] = value[k];
+			}
+			value.attributes = atts;
+			field.render(value);
+			break;
+
+		case 'wysiwyg':
+			var editorWrap = field.$el.find('.wp-editor-wrap');
+			if (editorWrap.length > 0) {
+				var editorID = editorWrap.eq(0).attr('id').replace(/^wp-/, '').replace(/-wrap$/, '')
+				window.tinyMCE.get(editorID).setContent(value);
+			}
+			break;
+
+		case 'oembed':
+			var url = $(value).attr('src').split('?').shift();
+
+			field.$search().val(url);
+			field.val(url);
+			field.$el.find('.canvas-media').html(value);
+
+			break;
+
+		case 'gallery':
+			for (var attIndex in value) {
+				var att = value[attIndex];
+				field.appendAttachment(att, attIndex);
+			}
+
+			break;
+
+		case 'checkbox':
+			field.$inputs().each(function (i, checkbox) {
+				if (value.indexOf(checkbox.value) >= 0) {
+					checkbox.setAttribute('checked', 'checked');
+				}
+			});
+			break;
+
+		case 'radio':
+			field.$control().find('[value="' + value + '"]').prop('checked', 'checked');
+			break;
+
+		case 'button_group':
+			field.val(value);
+			field.$el.find('input[value="' + value + '"]').prop('checked', 'checked').trigger('click');
+			break;
+
+		case 'true_false':
+			if (value) {
+				field.$input().prop('checked', 'checked');
+			}
+			break;
+
+		case 'post_object':
+			setSelect2FieldValue(field, value.ID, value.post_title);
+			break;
+
+		case 'page_link':
+			setSelect2FieldValue(field, value, value);
+			break;
+
+		case 'relationship':
+			var loadCheck = setInterval(function () {
+				if (!field.get('loading')) {
+					clearInterval(loadCheck);
+					for (var relIndex in value) {
+						var post = value[relIndex];
+						field.$el.find('[data-id=' + post.ID + ']').trigger('click');
+					}
+				}
+			}, 100);
+
+			break;
+
+		case 'taxonomy':
+			for (var taxIndex in value) {
+				field.$el
+					.find('[value=' + value[taxIndex] + ']')
+					.prop('checked', 'checked');
+			}
+			break;
+
+		case 'user':
+			var userLabel = value.user_nicename + ' (' + value.nickname + ')';
+			setSelect2FieldValue(field, value.ID, userLabel);
+			break;
+
+		case 'google_map':
+			break;
+
+		case 'date_picker':
+		case 'date_time_picker':
+		case 'time_picker':
+			field.val(value);
+			field.$el.find('[type=text]').val(value);
+			break;
+
+		default:
+			field.val(value);
+	}
 }
 
 function onAdminReady() {
@@ -236,7 +272,7 @@ function onAdminReady() {
 }
 
 function initializePrefabs() {
-	$(CONTROLS_SELECTOR).each((i, el) => {
+	$(CONTROLS_SELECTOR).each(function (i, el) {
 		var controls = $(el);
 		var layout = controls.closest('.layout');
 
