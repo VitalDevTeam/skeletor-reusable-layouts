@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Skeletor Reusable Layouts
  * Description: Add-on for Skeletor to create a library of Reusable Layouts which automatically appear in the Global Layouts menu
- * Version: 1.2.1-beta
+ * Version: 1.2.2-beta
  * Author: Vital Design
  * Author URI: https://vtldesign.com
  */
@@ -73,9 +73,13 @@ MSG;
 
 		foreach ($gb_posts as $p) {
 			add_filter("render_reusable_layout_{$p->post_name}", function() use ($p) {
-				return VTL_Global_Layouts::get_flexible_layouts('layouts', $p);
+				return static::render_reusable_layout($p);
 			});
 		}
+	}
+
+	public static function render_reusable_layout($reusable_layout) {
+		return VTL_Global_Layouts::get_flexible_layouts('layouts', $reusable_layout);
 	}
 
 	public static function rest_api_init() {
