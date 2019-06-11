@@ -55,7 +55,7 @@ function onClickSavePrefab(e) {
 	var prefab = getLayoutAsPrefab(layout);
 
 	var customTitle = '';
-	var customTitleField = acf.getFields({name: 'custom_layout_title', parent: layout}).pop();
+	var customTitleField = acf.getFields({ name: 'custom_layout_title', parent: layout }).pop();
 
 	if (customTitleField) {
 		customTitle = customTitleField.val();
@@ -71,8 +71,8 @@ function onClickSavePrefab(e) {
 				var fcField = acf.getField(layout.closest('.acf-field-flexible-content').attr('data-key'));
 
 				fcField.$el.find('.clones')
-				 .eq(0)
-				 .append(data.layout);
+					.eq(0)
+					.append(data.layout);
 
 				fcField.add({
 					layout: data.layoutData.name,
@@ -96,8 +96,8 @@ function onClickBreakApart(e) {
 	var fcField = acf.getField(layoutEl.closest('.acf-field-flexible-content').attr('data-key'));
 
 	$.get(`${SiteInfo.restUrl}vtl/vtlreusablelayouts/${prefabId}`)
-		.then(function(data) {
-			for (var i=0; i<data.layouts.length; i++) {
+		.then(function (data) {
+			for (var i = 0; i < data.layouts.length; i++) {
 				var l = data.layouts[i];
 
 				var added = fcField.add({
@@ -114,7 +114,7 @@ function onClickBreakApart(e) {
 				}
 			}
 
-			layoutEl.slideUp(400, function() {
+			layoutEl.slideUp(400, function () {
 				fcField.removeLayout(layoutEl);
 			});
 		});
@@ -169,11 +169,19 @@ function setFieldValue(field, value) {
 			break;
 
 		case 'wysiwyg':
+			var $wrap = field.$control();
+			if ($wrap.hasClass('delay')) {
+				$wrap.removeClass('delay');
+				$wrap.find('.acf-editor-toolbar').remove();
+				field.initializeEditor();
+			}
+
 			var editorWrap = field.$el.find('.wp-editor-wrap');
 			if (editorWrap.length > 0) {
 				var editorID = editorWrap.eq(0).attr('id').replace(/^wp-/, '').replace(/-wrap$/, '')
 				window.tinyMCE.get(editorID).setContent(value);
 			}
+
 			break;
 
 		case 'oembed':
@@ -283,8 +291,8 @@ function initializePrefabs() {
 	});
 
 	$(document)
-	 .on('click', '[data-name="save-prefab"]', onClickSavePrefab)
-	 .on('click', '.break-apart[data-prefab-id]', onClickBreakApart);
+		.on('click', '[data-name="save-prefab"]', onClickSavePrefab)
+		.on('click', '.break-apart[data-prefab-id]', onClickBreakApart);
 }
 
 function adminNotice(html) {
@@ -292,7 +300,7 @@ function adminNotice(html) {
 	output.html(html);
 
 	var dismiss = $('<button type="button" class="notice-dismiss"><span class="screen-reader-text">Dismiss this notice</span></button>');
-	dismiss.on('click', function() {
+	dismiss.on('click', function () {
 		output.remove();
 	});
 
