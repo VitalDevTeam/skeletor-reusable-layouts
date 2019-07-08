@@ -63,7 +63,7 @@ MSG;
 			'public'             => false,
 			'show_ui'            => true,
 			'publicly_queryable' => true,
-			'menu_icon'          => 'dashicons-archive',
+			'menu_icon'          => 'dashicons-update',
 		]);
 
 		$gb_posts = get_posts([
