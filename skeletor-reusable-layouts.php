@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Skeletor Reusable Layouts
  * Description: Add-on for Skeletor to create a library of Reusable Layouts which automatically appear in the Global Layouts menu
- * Version: 1.2.2-beta
+ * Version: 1.2.3-beta
  * Author: Vital Design
  * Author URI: https://vtldesign.com
  */
@@ -62,8 +62,10 @@ MSG;
 			'label'              => 'Reusable Layouts',
 			'public'             => false,
 			'show_ui'            => true,
-			'publicly_queryable' => true,
 			'menu_icon'          => 'dashicons-update',
+			'publicly_queryable' => false,
+			'has_archive'        => false,
+			'rewrite'            => false,
 		]);
 
 		$gb_posts = get_posts([
@@ -155,7 +157,7 @@ MSG;
 	}
 
 	public static function acf_validate_save_post() {
-		if ($_POST['post_type'] === static::$post_type) {
+		if (array_key_exists('post_type', $_POST) && $_POST['post_type'] === static::$post_type) {
 			$block_layouts = $_POST['acf']['field_reusable_layout_layouts_clone']['field_reusable_layout_layouts_clone_field_global_layouts'];
 
 			foreach ($block_layouts as $k=>$l) {
