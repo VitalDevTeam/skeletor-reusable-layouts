@@ -16,8 +16,8 @@ class VTL_Skeletor_Reusable_Layouts {
 
 	public static function get_reusable_layout_layouts() {
 		$gb_posts = get_posts([
-			'post_type' => static::$post_type,
-			'status'    => 'publish',
+			'post_type'      => static::$post_type,
+			'posts_per_page' => -1,
 		]);
 
 		return array_map(['VTL_Skeletor_Reusable_Layouts', 'reusable_layout_to_global_layout'], $gb_posts);
