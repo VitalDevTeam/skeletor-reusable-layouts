@@ -3,7 +3,7 @@ class VTL_Skeletor_Reusable_Layouts_REST_Controller extends WP_REST_Controller {
 	public $post_factory = null;
 
 	public function __construct($post_type, $post_factory) {
-		$this->namespace = '/vtl';
+		$this->namespace = 'vtl';
 		$this->resource_name = $post_type;
 		$this->post_factory = $post_factory;
 	}
