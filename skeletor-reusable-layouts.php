@@ -71,6 +71,7 @@ MSG;
 		$gb_posts = get_posts([
 			'post_type' => static::$post_type,
 			'status'    => 'publish',
+			'posts_per_page' => -1,
 		]);
 
 		foreach ($gb_posts as $p) {
