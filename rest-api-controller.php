@@ -12,11 +12,13 @@ class VTL_Skeletor_Reusable_Layouts_REST_Controller extends WP_REST_Controller {
 		register_rest_route($this->namespace, "/{$this->resource_name}", [
 			'methods'  => 'POST',
 			'callback' => [$this, 'create_reusable_layout'],
+			'permission_callback' => '__return_true',
 		]);
 
 		register_rest_route($this->namespace, "/{$this->resource_name}/(?P<id>[0-9]+)", [
 			'methods'  => 'GET',
 			'callback' => [$this, 'break_apart_reusable_layout'],
+			'permission_callback' => '__return_true',
 		]);
 	}
 
